@@ -127,7 +127,7 @@ namespace DFE.TMS.Business.Logic
             string responseResult = response.Results["InnerCalendarIds"]?.ToString();
         }
 
-        public Guid? CreateTimeOffRequestForBookableResource(Guid bookableResourceId, DateTime timeOfDay)
+        public (Guid?,Guid?) CreateTimeOffRequestForBookableResource(Guid bookableResourceId, DateTime timeOfDay)
         {
             if (OkToCreateTimeOffRequest(new EntityReference() { Id = bookableResourceId }, timeOfDay, out List<CalendarRule> foundRules))
             {
@@ -135,11 +135,13 @@ namespace DFE.TMS.Business.Logic
                 Entity bookableResource = RetrieveBookableResource(new EntityReference(C.BookableResource.EntityName) { Id = bookableResourceId });
                 if (bookableResource != null && bookableResource.Contains(C.BookableResource.CalendarId))
                 {
-                    return CreateTimeOffRequest(bookableResource.GetAttributeValue<EntityReference>(C.BookableResource.CalendarId).Id, timeOfDay);
+                    var calendarId = bookableResource.GetAttributeValue<EntityReference>(C.BookableResource.CalendarId).Id;
+                    var innerCalendarId = CreateTimeOffRequest(calendarId, timeOfDay);
+                    return (calendarId, innerCalendarId);
                 }
             }
 
-            return null;
+            return (Guid.Empty,Guid.Empty);
         }
 
         public Guid? CreateTimeOffRequest(Guid calendarId, DateTime timeOfDay)
@@ -163,7 +165,6 @@ namespace DFE.TMS.Business.Logic
             }
 
             return null;
-        }
-            
+        }        
     }
 }

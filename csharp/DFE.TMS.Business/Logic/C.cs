@@ -31,6 +31,7 @@ namespace DFE.TMS.Business.Logic
             public const string CalendarRuleId = "dfe_calendarruleid";
             public const string CalendarId = "dfe_calendarid";
             public const string InnerCalendarId = "dfe_innercalendarid";
+            public const string Resource = "mhc_resource";
             public const string Start = "mhc_start";
             public const string End = "mhc_end";
             public const string Name = "mhc_name";
