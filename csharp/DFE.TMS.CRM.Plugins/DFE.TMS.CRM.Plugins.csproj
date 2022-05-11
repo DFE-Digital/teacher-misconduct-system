@@ -105,8 +105,7 @@
       <Link>DFE.TMS.Business\Models\ResultSetxml.cs</Link>
     </Compile>
     <Compile Include="PortalTimeOffRequestDeleteActivity.cs" />
-    <Compile Include="PortalTimeOffRequestPreCreateActivity - Copy.cs" />
-    <Compile Include="PortalTimeOffRequestPostCreateActivity.cs" />
+    <Compile Include="PortalTimeOffRequestPreCreateActivity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
