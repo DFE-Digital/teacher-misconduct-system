@@ -14,7 +14,6 @@ namespace DFE.TMS.Business.Logic
         public ITracingService TracingService { get; }
         public CalendarBusinessLogic CalendarBusinessLogic { get; }
 
-        private static object LockPostCreate = new object();
         private static object LockPreCreate = new object();
         private static object LockDelete = new object();
 
@@ -66,45 +65,6 @@ namespace DFE.TMS.Business.Logic
                             targetToCreate.Attributes[C.PortalTimeOffRequest.Name] = "Unavailable";
                             targetToCreate[C.PortalTimeOffRequest.CalendarId] = calenderItem.Item1.Value.ToString("D");
                             targetToCreate[C.PortalTimeOffRequest.InnerCalendarId] = calenderItem.Item2.Value.ToString("D");
-                        }
-                        else
-                            throw new Exception($"Cannot create portal request item for this day {timeOffDate.ToString("yyyy-MM-dd")}!!");
-
-                    }
-                }
-            }
-        }
-
-        public void PostCreateActivity(Entity targetEntityCreated)
-        {
-            lock (LockPostCreate)
-            {
-
-                TracingService.Trace("Entering: PostCreateActivity(Entity targetEntityCreated)");
-                // Get the date of the time off request
-                // check and see if it's ok to create
-                // create the time off request and populate the target to create
-                // with the various ids 
-                if (targetEntityCreated != null)
-                {
-                    if (targetEntityCreated.Contains(C.PortalTimeOffRequest.Resource)
-                        && targetEntityCreated.Contains(C.PortalTimeOffRequest.Start))
-                    {
-                        TracingService.Trace("Passed 1st Phase of Conditions");
-                        var bookableResource = targetEntityCreated.GetAttributeValue<EntityReference>(C.PortalTimeOffRequest.Resource);
-                        var timeOffDate = targetEntityCreated.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start);
-
-                        var calenderItem = CalendarBusinessLogic.CreateTimeOffRequestForBookableResource(bookableResource.Id, timeOffDate);
-                        if (calenderItem.Item1.HasValue && (calenderItem.Item1.Value.CompareTo(Guid.Empty) != 0))
-                        {
-                            TracingService.Trace("We have a calendar item. Save against the portal time off request");
-                            Entity targetEntityToUpdate = new Entity(C.PortalTimeOffRequest.EntityName, targetEntityCreated.Id);
-
-                            targetEntityToUpdate.Attributes[C.PortalTimeOffRequest.Name] = "Unavailable";
-                            targetEntityToUpdate[C.PortalTimeOffRequest.CalendarId] = calenderItem.Item1.Value.ToString("D");
-                            targetEntityToUpdate[C.PortalTimeOffRequest.InnerCalendarId] = calenderItem.Item2.Value.ToString("D");
-
-                            OrganizationService.Update(targetEntityToUpdate);
                         }
                         else
                             throw new Exception($"Cannot create portal request item for this day {timeOffDate.ToString("yyyy-MM-dd")}!!");
