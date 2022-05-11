@@ -10,7 +10,6 @@ namespace DFE.TMS.CRM.Plugins
 {
     public class PortalTimeOffRequestPreCreateActivity : IPlugin
     {
-        public static object lockOperation = new object();
         public void Execute(IServiceProvider serviceProvider)
         {
             var context = (IPluginExecutionContext)serviceProvider.GetService(typeof(IPluginExecutionContext));
@@ -28,11 +27,8 @@ namespace DFE.TMS.CRM.Plugins
                 {
                     target = (Entity)context.InputParameters["Target"];
 
-                    lock (lockOperation)
-                    {
-                        // Since we have the target we can now perform the action on this precreated entity.
-                        portalBusinessLogic.PreCreatePortalTimeOffRequest(target);
-                    }
+                    // Since we have the target we can now perform the action on this precreated entity.
+                    portalBusinessLogic.PreCreatePortalTimeOffRequest(target);
                 }
             }
         }
