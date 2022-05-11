@@ -19,7 +19,10 @@ namespace DFE.TMS.Business.Console.Scratch
             var calendarItems = logic.RetrieveUnavailabilityCalendarItemsForBookableResourceGivenStartTime(new EntityReference() { Id = Guid.Parse("91e7f215-8377-ec11-8d21-0022489da882") }, new DateTime(2022, 5, 4));
             // Delete the calendar rule item
             //logic.DeleteCalendarRequest(Guid.Parse(calendarItems[0].CalendarId), Guid.Parse(calendarItems[0].InnerCalendarId));
-            //logic.CreateTimeOffRequestForBookableResource(Guid.Parse("91e7f215-8377-ec11-8d21-0022489da882"), new DateTime(2022, 5, 6));
+            for (int p = 0; p < 5; p++)
+            {
+                logic.CreateTimeOffRequestForBookableResource(Guid.Parse("91e7f215-8377-ec11-8d21-0022489da882"), new DateTime(2022, 5, 8).AddDays(p));
+            }
         }
 
         public static CrmServiceClient Connect()

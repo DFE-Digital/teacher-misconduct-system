@@ -35,6 +35,8 @@ namespace DFE.TMS.Business.Logic
             public const string Start = "mhc_start";
             public const string End = "mhc_end";
             public const string Name = "mhc_name";
+
+            public const string State = "statecode";
         }
     }
 }
