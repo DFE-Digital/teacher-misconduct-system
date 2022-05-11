@@ -6,8 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Json;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 
@@ -115,16 +115,62 @@ namespace DFE.TMS.Business.Logic
             return null;
         }
 
+        public bool CalendarRuleExists(Guid calendarId, Guid innerCalendarId)
+        {
+            TracingService.Trace($"Entering: CheckIfCalendarRuleExists(Guid calendarId {calendarId}, Guid innerCalendarId {innerCalendarId})");
+            string fetchxml = string.Format("<fetch top=\"50\">"
+                              + "<entity name =\"calendarrule\">"
+                              + "<filter>"
+                              + "<condition attribute =\"calendarid\" operator=\"eq\" value=\"{0}\" />"
+                              + "<condition attribute =\"innercalendarid\" operator=\"eq\" value=\"{1}\" />"
+                              + "</filter>"
+                              + "</entity>"
+                              + "</fetch >", calendarId.ToString("B"), innerCalendarId.ToString("B"));
+
+            ExecuteFetchRequest request = new ExecuteFetchRequest();
+            request.FetchXml = fetchxml;
+
+            var response = (ExecuteFetchResponse)OrganizationService.Execute(request);
+
+            if (response.Results.Count > 0)
+            {
+                var serializer = new XmlSerializer(typeof(resultset));
+                using (TextReader reader = new StringReader(response.FetchXmlResult))
+                {
+                    var responseCalendar = (resultset)serializer.Deserialize(reader);
+                    var calendarRules = responseCalendar
+                        .result?
+                        .ToList()
+                        .Select(x => new CalendarRule()
+                        {
+                            CalendarId = x.calendarid.Value,
+                            InnerCalendarId = x.innercalendarid.Value,
+                            CalendarRuleId = x.calendarruleid,
+                            ExtentCode = x.extentcode.Value.ToString(),
+                            StartTime = x.starttime.Value
+                        }).ToList();
+
+                    if (calendarRules != null && calendarRules.Count > 0)
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
         public void DeleteCalendarRequest(Guid calendarId, Guid innerCalendarId)
         {
-            TracingService.Trace($"Entering DeleteCalendarRequest(Guid calendarId {calendarId}, Guid innerCalendarId {innerCalendarId})");
-            OrganizationRequest request = new OrganizationRequest("msdyn_DeleteCalendar");
-            string requestString = string.Format("{{\"CalendarId\":\"{0}\",\"EntityLogicalName\":\"bookableresource\",\"InnerCalendarId\":\"{1}\"}}", calendarId.ToString("D"), innerCalendarId.ToString("D"));
+            if (CalendarRuleExists(calendarId, innerCalendarId))
+            { 
+                TracingService.Trace($"Entering DeleteCalendarRequest(Guid calendarId {calendarId}, Guid innerCalendarId {innerCalendarId})");
+                OrganizationRequest request = new OrganizationRequest("msdyn_DeleteCalendar");
+                string requestString = string.Format("{{\"CalendarId\":\"{0}\",\"EntityLogicalName\":\"bookableresource\",\"InnerCalendarId\":\"{1}\"}}", calendarId.ToString("D"), innerCalendarId.ToString("D"));
 
-            request["CalendarEventInfo"] = requestString;
-            OrganizationResponse response = (OrganizationResponse)OrganizationService.Execute(request);
+                request["CalendarEventInfo"] = requestString;
+                OrganizationResponse response = (OrganizationResponse)OrganizationService.Execute(request);
 
-            string responseResult = response.Results["InnerCalendarIds"]?.ToString();
+                string responseResult = response.Results["InnerCalendarIds"]?.ToString();
+            }
         }
 
         public (Guid?,Guid?) CreateTimeOffRequestForBookableResource(Guid bookableResourceId, DateTime timeOfDay)
@@ -159,12 +205,34 @@ namespace DFE.TMS.Business.Logic
 
             if (!string.IsNullOrEmpty(responseResult))
             {
-               var results = JsonSerializer.Deserialize<string[]>(responseResult);
+
+                var results = GetJsonStringArrays(responseResult);
                 if (results != null && results.Count() == 1)
                     return Guid.Parse(results[0]);
             }
 
             return null;
-        }        
+        }
+
+        private string[] GetJsonStringArrays(string jsonString)
+        {
+
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                //initialize DataContractJsonSerializer object and pass Student class type to it
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(string[]));
+
+                //user stream writer to write JSON string data to memory stream
+                StreamWriter writer = new StreamWriter(memoryStream);
+                writer.Write(jsonString);
+                writer.Flush();
+
+                memoryStream.Position = 0;
+                //get the Desrialized data in object of type Student
+                string[] serializedObject = (string[])serializer.ReadObject(memoryStream);
+
+                return serializedObject;
+            }
+        }
     }
 }
