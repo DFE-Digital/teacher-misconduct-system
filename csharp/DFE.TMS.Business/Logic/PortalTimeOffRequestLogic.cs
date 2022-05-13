@@ -213,12 +213,12 @@ namespace DFE.TMS.Business.Logic
                             }
 
                             // Create then update the portal request with the new 
-                            var idsToUpdatePortaRequest = CalendarBusinessLogic
+                            var idsToUpdatePortalRequest = CalendarBusinessLogic
                                 .CreateTimeOffRequestForBookableResource(
                                 portalRequest.GetAttributeValue<EntityReference>(C.PortalTimeOffRequest.Resource).Id,
                                 portalRequest.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start));
 
-                            UpdatePortalRequestWithCalendarIds(portalRequest.Id, idsToUpdatePortaRequest.Item1, idsToUpdatePortaRequest.Item2);
+                            UpdatePortalRequestWithCalendarIds(portalRequest.Id, idsToUpdatePortalRequest.Item1, idsToUpdatePortalRequest.Item2);
                         }
 
                         // If we only have 1 rule then we ensure that the portal time off request matches the calendar id
@@ -234,12 +234,14 @@ namespace DFE.TMS.Business.Logic
                     }
                     else
                     {
+                        TracingService.Trace("Create calendar item for this portal request and update it!");
                         // Create then update the portal request with the new 
-                        var idsToUpdatePortaRequest = CalendarBusinessLogic
+                        var idsToUpdatePortalRequest = CalendarBusinessLogic
                             .CreateTimeOffRequestForBookableResource(
                             portalRequest.GetAttributeValue<EntityReference>(C.PortalTimeOffRequest.Resource).Id,
                             portalRequest.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start));
 
+                        UpdatePortalRequestWithCalendarIds(portalRequest.Id, idsToUpdatePortalRequest.Item1, idsToUpdatePortalRequest.Item2);
                     }
                 }
             }
