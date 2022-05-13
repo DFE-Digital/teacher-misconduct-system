@@ -43,14 +43,21 @@ namespace DFE.TMS.Business.Logic
             TracingService.Trace($"Found {allPortalRequestsBetweenDates?.Count} portalRequestDates");
             
             //2.  Also between the start and end time we search for the days that we do not have a portal time off request
-            List<DateTime> daysWithoutNoPortalRequest = GetListOfDatesThatDoNotHaveAPortalTimeOffRequestAganstIt(allPortalRequestsBetweenDates, startTime, endTime);
-            TracingService.Trace($"There are number {daysWithoutNoPortalRequest}! without no portal requests");
+            List<DateTime> daysWithoutPortalRequest = GetListOfDatesThatDoNotHaveAPortalTimeOffRequestAganstIt(allPortalRequestsBetweenDates, startTime, endTime);
+            TracingService.Trace($"There are {daysWithoutPortalRequest?.Count} days without portal requests between {startTime} and {endTime}");
 
             //3.  Foreach portal time off request we ensure that we have a calendar item and id's against the record
             EnsurePortalTimeOffRequestsHaveCalendarIds(allPortalRequestsBetweenDates);
-            
-            //4.  Foreach day in 2 we ensure that they are no time off requests.
 
+            //4.  Foreach day in 2 we ensure that they are no time off requests.
+            RemoveCalendarItemsFromDaysWithoutPortalRequest(bookableReference, daysWithoutPortalRequest);
+
+            TracingService.Trace("Finishing sync");
+        }
+
+        private void RemoveCalendarItemsFromDaysWithoutPortalRequest(EntityReference bookableReference, List<DateTime> daysWithoutNoPortalRequest)
+        {
+            throw new NotImplementedException();
         }
 
         public void PreCreatePortalTimeOffRequest(Entity targetToCreate)
