@@ -11,6 +11,7 @@ namespace DFE.TMS.Business.Logic
 {
     public class PortalTimeOffRequestLogic
     {
+        public const string DateKeyFormat = "yyyyMMdd";
         public IOrganizationService OrganizationService { get; }
         public ITracingService TracingService { get; }
         public CalendarBusinessLogic CalendarBusinessLogic { get; }
@@ -41,23 +42,71 @@ namespace DFE.TMS.Business.Logic
             //1 . We search for all portal time off requests between the start and end time
             List<Entity> allPortalRequestsBetweenDates = GetAllPortalRequestsBetweenDates(bookableReference, startTime, endTime);
             TracingService.Trace($"Found {allPortalRequestsBetweenDates?.Count} portalRequestDates");
-            
-            //2.  Also between the start and end time we search for the days that we do not have a portal time off request
+
+            //2. We ensure we only have 1 time off portal request per day.
+            allPortalRequestsBetweenDates = EnsureOnlyOnePortalRequestPerDay(allPortalRequestsBetweenDates);
+            TracingService.Trace($"Number of Unique Portal Requests {allPortalRequestsBetweenDates?.Count}");
+
+            //3.  Also between the start and end time we search for the days that we do not have a portal time off request
             List<DateTime> daysWithoutPortalRequest = GetListOfDatesThatDoNotHaveAPortalTimeOffRequestAganstIt(allPortalRequestsBetweenDates, startTime, endTime);
             TracingService.Trace($"There are {daysWithoutPortalRequest?.Count} days without portal requests between {startTime} and {endTime}");
 
-            //3.  Foreach portal time off request we ensure that we have a calendar item and id's against the record
+            //4.  Foreach portal time off request we ensure that we have a calendar item and id's against the record
             EnsurePortalTimeOffRequestsHaveCalendarIds(allPortalRequestsBetweenDates);
 
-            //4.  Foreach day in 2 we ensure that they are no time off requests.
+            //5.  Foreach day in 2 we ensure that they are no time off requests.
             RemoveCalendarItemsFromDaysWithoutPortalRequest(bookableReference, daysWithoutPortalRequest);
-
-            TracingService.Trace("Finishing sync");
+            TracingService.Trace("Finished sync between dates ");
         }
 
-        private void RemoveCalendarItemsFromDaysWithoutPortalRequest(EntityReference bookableReference, List<DateTime> daysWithoutNoPortalRequest)
+        private List<Entity> EnsureOnlyOnePortalRequestPerDay(List<Entity> allPortalRequestsBetweenDates)
         {
-            throw new NotImplementedException();
+            Dictionary<string, Entity> uniquePortalRequests = new Dictionary<string, Entity>();
+
+            foreach (Entity entity in allPortalRequestsBetweenDates)
+            {
+                if (entity.Contains(C.PortalTimeOffRequest.Start))
+                {
+                    var retrievedDate = entity.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start);
+                    if (uniquePortalRequests.ContainsKey(retrievedDate.ToString(DateKeyFormat)))
+                    {
+                        DeactivatePortalTimeOffRequest(entity);
+                    }
+                    else
+                    {
+                        uniquePortalRequests.Add(retrievedDate.ToString(DateKeyFormat), entity);
+                    }
+                }
+
+            }
+
+            return uniquePortalRequests?.Select(x => x.Value).ToList();
+        }
+
+        private void DeactivatePortalTimeOffRequest(Entity entity)
+        {
+            TracingService.Trace($"Deactivating portal time off request with date {entity.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start)}");
+
+            Entity entityToDeactivate = new Entity(C.PortalTimeOffRequest.EntityName, entity.Id);
+            entityToDeactivate[C.PortalTimeOffRequest.State] = new OptionSetValue(1);
+            entityToDeactivate[C.PortalTimeOffRequest.StatusCode] = new OptionSetValue(2);
+
+            OrganizationService.Update(entityToDeactivate);
+        }
+
+        private void RemoveCalendarItemsFromDaysWithoutPortalRequest(EntityReference bookableReference, List<DateTime> daysWithoutPortalRequest)
+        {
+            foreach (var date in daysWithoutPortalRequest)
+            {
+                if (!CalendarBusinessLogic.OkToCreateTimeOffRequest(bookableReference, date, out List<CalendarRule> rules))
+                {
+                    TracingService.Trace($"Deleting calendarItems for date {date}");
+                    foreach (var cRule in rules)
+                    {
+                        CalendarBusinessLogic.DeleteCalendarRequest(Guid.Parse(cRule.CalendarId), Guid.Parse(cRule.InnerCalendarId));
+                    }
+                }
+            }
         }
 
         public void PreCreatePortalTimeOffRequest(Entity targetToCreate)
@@ -156,7 +205,6 @@ namespace DFE.TMS.Business.Logic
         private List<DateTime> GetListOfDatesThatDoNotHaveAPortalTimeOffRequestAganstIt(List<Entity> portalTimeOffRequest, DateTime from, DateTime to)
         {
             Dictionary<string, DateTime> daysWithouthPortalTimeOffRequests = new Dictionary<string, DateTime>();
-            const string Format = "yyyyMMdd";
 
             // Sanitize from and to dates just in case
             DateTime dateFrom = new DateTime(from.Year, from.Month, from.Day);
@@ -165,16 +213,21 @@ namespace DFE.TMS.Business.Logic
             // Then if it's the same day and only 1 check
             if (dateFrom.CompareTo(dateTo) == 0)
             {
-                daysWithouthPortalTimeOffRequests.Add(dateFrom.ToString(Format), dateFrom);
+                TracingService.Trace($"Date {dateTo} From and to are the same.");
+                daysWithouthPortalTimeOffRequests.Add(dateFrom.ToString(DateKeyFormat), dateFrom);
             }
             else
             {
                 DateTime start = new DateTime(dateFrom.Year, dateFrom.Month, dateFrom.Day);
                 // soon as the start goes over 1 day of the date to then complete the loop
-                while (start.CompareTo(dateTo) != 1)
+                while (start < dateTo)
                 {
-                    if(!daysWithouthPortalTimeOffRequests.ContainsKey(start.ToString(Format)))
-                        start = start.AddDays(1);
+                    if (!daysWithouthPortalTimeOffRequests.ContainsKey(start.ToString(DateKeyFormat)))
+                    {
+                        daysWithouthPortalTimeOffRequests.Add(start.ToString(DateKeyFormat), start);
+                    }
+
+                    start = start.AddDays(1);
                 }
             }
 
@@ -186,9 +239,9 @@ namespace DFE.TMS.Business.Logic
                     if (entity.Contains(C.PortalTimeOffRequest.Start))
                     {
                         DateTime date = entity.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start);
-                        if (daysWithouthPortalTimeOffRequests.ContainsKey(date.ToString(Format)))
+                        if (daysWithouthPortalTimeOffRequests.ContainsKey(date.ToString(DateKeyFormat)))
                         {
-                            daysWithouthPortalTimeOffRequests.Remove(date.ToString(Format));
+                            daysWithouthPortalTimeOffRequests.Remove(date.ToString(DateKeyFormat));
                         }
                     }
                 }
@@ -235,7 +288,7 @@ namespace DFE.TMS.Business.Logic
                             if (!CheckIfPortalRequestHasSameRuleInformation(portalRequest, foundRules[0]))
                             {
                                 TracingService.Trace($"Updating portal time off request {portalRequest.Id} with calendarItems");
-                                UpdatePortalRequestWithCalendarIds(portalRequest.Id, Guid.Parse(foundRules[0].CalendarId), Guid.Parse(foundRules[1].InnerCalendarId));
+                                UpdatePortalRequestWithCalendarIds(portalRequest.Id, Guid.Parse(foundRules[0].CalendarId), Guid.Parse(foundRules[0].InnerCalendarId));
                             }
                         }
                     }
@@ -261,7 +314,7 @@ namespace DFE.TMS.Business.Logic
             everythingChecksOut.Add(portalRequest.Contains(C.PortalTimeOffRequest.CalendarId));
             everythingChecksOut.Add(portalRequest.Contains(C.PortalTimeOffRequest.InnerCalendarId));
 
-            if (everythingChecksOut.All(x => true))
+            if (everythingChecksOut.All(x => x == true))
             {
                 everythingChecksOut.Add(
                     Guid.Parse(portalRequest.GetAttributeValue<string>(C.PortalTimeOffRequest.CalendarId))
@@ -282,8 +335,8 @@ namespace DFE.TMS.Business.Logic
             if (item1.HasValue && item2.HasValue)
             {
                 Entity portalTimeOffRequestUpdate = new Entity(C.PortalTimeOffRequest.EntityName, id);
-                portalTimeOffRequestUpdate[C.PortalTimeOffRequest.CalendarId] = item1.Value;
-                portalTimeOffRequestUpdate[C.PortalTimeOffRequest.InnerCalendarId] = item2.Value;
+                portalTimeOffRequestUpdate[C.PortalTimeOffRequest.CalendarId] = item1.Value.ToString("D");
+                portalTimeOffRequestUpdate[C.PortalTimeOffRequest.InnerCalendarId] = item2.Value.ToString("D");
 
                 OrganizationService.Update(portalTimeOffRequestUpdate);
             }
