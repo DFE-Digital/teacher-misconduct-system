@@ -84,6 +84,7 @@
     <Compile Include="Logic\CalendarBusinessLogic.cs" />
     <Compile Include="Logic\PortalTimeOffRequestLogic.cs" />
     <Compile Include="Models\CalendarRule.cs" />
+    <Compile Include="Models\FullSyncResults.cs" />
     <Compile Include="Models\ResultSetxml.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
