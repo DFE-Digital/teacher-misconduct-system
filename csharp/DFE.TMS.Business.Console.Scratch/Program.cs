@@ -16,13 +16,17 @@ namespace DFE.TMS.Business.Console.Scratch
         {
             var client = Connect();
             var consoleService = new ConsoleTracingService();
+
+            // Jenny
+            var userBookableResource = new EntityReference() { Id = Guid.Parse("27246f57-d6c6-ec11-a7b6-0022489cceb2") };
+            ;
             // Dane
-            var userBookableResource = new EntityReference() { Id = Guid.Parse("908700d9-51b7-ec11-983f-000d3a66cc39") };
+            //var userBookableResource = new EntityReference() { Id = Guid.Parse("908700d9-51b7-ec11-983f-000d3a66cc39") };
             // Dean
             //var userBookableResource = new EntityReference() { Id = Guid.Parse("91e7f215-8377-ec11-8d21-0022489da882") };
             CalendarBusinessLogic logic = new CalendarBusinessLogic(client, consoleService);
             PortalTimeOffRequestLogic portalLogic = new PortalTimeOffRequestLogic(client, consoleService, logic);
-            var calendarItems = logic.RetrieveUnavailabilityCalendarItemsForBookableResourceGivenStartTime(userBookableResource, new DateTime(2022, 5, 4));
+           // var calendarItems = logic.RetrieveUnavailabilityCalendarItemsForBookableResourceGivenStartTime(userBookableResource, new DateTime(2022, 5, 4));
 
             // Delete the calendar rule item
             //logic.DeleteCalendarRequest(Guid.Parse(calendarItems[0].CalendarId), Guid.Parse(calendarItems[0].InnerCalendarId));
@@ -31,7 +35,7 @@ namespace DFE.TMS.Business.Console.Scratch
             //    logic.CreateTimeOffRequestForBookableResource(Guid.Parse("91e7f215-8377-ec11-8d21-0022489da882"), new DateTime(2022, 5, 8).AddDays(p));
             //}
 
-            portalLogic.EnsureFullSyncOfPortalTimeOffRequestsWithBookableResourceCalendar(userBookableResource, new DateTime(2022, 05, 01), new DateTime(2022, 05, 30));
+            portalLogic.EnsureFullSyncOfPortalTimeOffRequestsWithBookableResourceCalendar(userBookableResource, new DateTime(2022, 8, 01), new DateTime(2022, 8, 31));
 
             System.Console.Read();
         }
