@@ -13,6 +13,10 @@ namespace DFE.TMS.Business.Logic
             public const string EntityName = "bookableresource";
             public const string EntityId = EntityName + "id";
             public const string CalendarId = "calendarid";
+            public const string FullSyncScript = "dfe_fullsynccompletefromscript";
+
+            public const string State = "statecode";
+            public const string StatusCode = "statuscode";
         }
 
         public static class CalendarRule
@@ -35,6 +39,20 @@ namespace DFE.TMS.Business.Logic
             public const string Start = "mhc_start";
             public const string End = "mhc_end";
             public const string Name = "mhc_name";
+
+            public const string State = "statecode";
+            public const string StatusCode = "statuscode";
+        }
+
+        public static class FullSyncPortalTimeOffRequest
+        {
+            public const string EntityName = "dfe_fullsyncportaltimeoffrequest";
+            public const string EntityId = EntityName + "id";
+            public const string From = "dfe_from";
+            public const string To = "dfe_to";
+            public const string Log = "dfe_log";
+            public const string Name = "dfe_name";
+            public const string BookableResource = "dfe_bookableresourceid";
 
             public const string State = "statecode";
             public const string StatusCode = "statuscode";
