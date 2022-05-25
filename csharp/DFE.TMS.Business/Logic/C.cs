@@ -57,5 +57,18 @@ namespace DFE.TMS.Business.Logic
             public const string State = "statecode";
             public const string StatusCode = "statuscode";
         }
+
+        public static class PortalTimeBlock
+        {
+            public const string EntityName = "mhc_portaltimeoffblock";
+            public const string EntityId = EntityName + "id";
+
+            public const string Resource = "mhc_resource";
+            public const string JsonDates = "dfe_jsondates";
+            public const string Name = "mhc_name";
+
+            public const string State = "statecode";
+            public const string StatusCode = "statuscode";
+        }
     }
 }

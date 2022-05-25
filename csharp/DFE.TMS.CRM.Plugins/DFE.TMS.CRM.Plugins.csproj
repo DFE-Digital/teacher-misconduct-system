@@ -34,8 +34,7 @@
     <SignAssembly>true</SignAssembly>
   </PropertyGroup>
   <PropertyGroup>
-    <AssemblyOriginatorKeyFile>
-    </AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\SolutionItems\signingkey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=5.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
@@ -105,9 +104,13 @@
     <Compile Include="..\DFE.TMS.Business\Models\FullSyncResults.cs">
       <Link>DFE.TMS.Business\Models\FullSyncResults.cs</Link>
     </Compile>
+    <Compile Include="..\DFE.TMS.Business\Models\PortalBlockJsonDates.cs">
+      <Link>DFE.TMS.Business\Models\PortalBlockJsonDates.cs</Link>
+    </Compile>
     <Compile Include="..\DFE.TMS.Business\Models\ResultSetxml.cs">
       <Link>DFE.TMS.Business\Models\ResultSetxml.cs</Link>
     </Compile>
+    <Compile Include="PortalTimeOffBlockPreCreateActivity.cs" />
     <Compile Include="PortalTimeOffRequestDeleteActivity.cs" />
     <Compile Include="PortalTimeOffRequestPreCreateActivity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

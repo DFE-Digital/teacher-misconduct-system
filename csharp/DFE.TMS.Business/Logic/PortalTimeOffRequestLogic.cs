@@ -4,7 +4,9 @@ using Microsoft.Xrm.Sdk.Query;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -71,62 +73,6 @@ namespace DFE.TMS.Business.Logic
             return toReturn;
         }
 
-        private List<Entity> EnsureOnlyOnePortalRequestPerDay(List<Entity> allPortalRequestsBetweenDates, out int deactivatedNumber)
-        {
-            Dictionary<string, Entity> uniquePortalRequests = new Dictionary<string, Entity>();
-            deactivatedNumber = 0;
-            foreach (Entity entity in allPortalRequestsBetweenDates)
-            {
-                if (entity.Contains(C.PortalTimeOffRequest.Start))
-                {
-                    var retrievedDate = entity.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start);
-                    if (uniquePortalRequests.ContainsKey(retrievedDate.ToString(DateKeyFormat)))
-                    {
-                        deactivatedNumber++;
-                        DeactivatePortalTimeOffRequest(entity);
-                    }
-                    else
-                    {
-                        uniquePortalRequests.Add(retrievedDate.ToString(DateKeyFormat), entity);
-                    }
-                }
-
-            }
-
-            return uniquePortalRequests?.Select(x => x.Value).ToList();
-        }
-
-        private void DeactivatePortalTimeOffRequest(Entity entity)
-        {
-            TracingService.Trace($"Deactivating portal time off request with date {entity.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start)}");
-
-            Entity entityToDeactivate = new Entity(C.PortalTimeOffRequest.EntityName, entity.Id);
-            entityToDeactivate[C.PortalTimeOffRequest.State] = new OptionSetValue(1);
-            entityToDeactivate[C.PortalTimeOffRequest.StatusCode] = new OptionSetValue(2);
-
-            OrganizationService.Update(entityToDeactivate);
-        }
-
-        private void RemoveCalendarItemsFromDaysWithoutPortalRequest(
-            EntityReference bookableReference, 
-            List<DateTime> daysWithoutPortalRequest,
-            out int calendarItemsDeleted)
-        {
-            calendarItemsDeleted = 0;
-            foreach (var date in daysWithoutPortalRequest)
-            {
-                if (!CalendarBusinessLogic.OkToCreateTimeOffRequest(bookableReference, date, out List<CalendarRule> rules))
-                {
-                    TracingService.Trace($"Deleting calendarItems for date {date}");
-                    foreach (var cRule in rules)
-                    {
-                        CalendarBusinessLogic.DeleteCalendarRequest(Guid.Parse(cRule.CalendarId), Guid.Parse(cRule.InnerCalendarId));
-                        calendarItemsDeleted++;
-                    }
-                }
-            }
-        }
-
         public void PreCreatePortalTimeOffRequest(Entity targetToCreate)
         {
             TracingService.Trace("Entering: PreCreatePortalTimeOffRequest(Entity targetToCreate)");
@@ -182,6 +128,128 @@ namespace DFE.TMS.Business.Logic
                         Guid calendarId = Guid.Parse(portalTimeOffRequest.GetAttributeValue<string>(C.PortalTimeOffRequest.CalendarId));
                         Guid innerCalendarId = Guid.Parse(portalTimeOffRequest.GetAttributeValue<string>(C.PortalTimeOffRequest.InnerCalendarId));
                         CalendarBusinessLogic.DeleteCalendarRequest(calendarId, innerCalendarId);
+                    }
+                }
+            }
+        }
+
+        public void CreateDeleteTimeOffRequests(
+            EntityReference bookableResource, 
+            string jsonDatesAsString)
+        {
+
+            TracingService.Trace($"Entering: EntityReference bookableResource, string jsonDateAsString {jsonDatesAsString}");
+            
+            if (bookableResource != null && !string.IsNullOrEmpty(jsonDatesAsString))
+            {
+                PortalBlockJsonDates portalBlockJsonDates = DeserializePortalBlockJsonDates(jsonDatesAsString);
+                if (portalBlockJsonDates.added != null && portalBlockJsonDates.added.Count() > 0)
+                {
+                    TracingService.Trace("We have added dates so we need to ensure that these can be created!");
+                    foreach (Added dateAdded in portalBlockJsonDates.added)
+                    {
+                        DateTime date = DateTime.Parse(dateAdded.date);
+                        DateTime dateStart = new DateTime(date.Year, date.Month, date.Day).AddHours(3);
+                        DateTime dateEnd = new DateTime(date.Year, date.Month, date.Day).AddHours(22);
+
+                        Entity portalTimeOffRequest = new Entity(C.PortalTimeOffRequest.EntityName);
+                        portalTimeOffRequest[C.PortalTimeOffRequest.Resource] = bookableResource;
+                        portalTimeOffRequest[C.PortalTimeOffRequest.Name] = "Unavailable";
+                        portalTimeOffRequest[C.PortalTimeOffRequest.Start] = dateStart;
+                        portalTimeOffRequest[C.PortalTimeOffRequest.End] = dateEnd;
+
+                        TracingService.Trace($"Creating time off date '{dateStart}' for bookable resource {bookableResource.Id}.");
+                        OrganizationService.Create(portalTimeOffRequest);
+                    }
+                }
+
+                if (portalBlockJsonDates.removed != null && portalBlockJsonDates.removed.Count() > 0)
+                {
+                    TracingService.Trace("We have removed dates so we need to ensure that these can be removed!");
+                    foreach (Removed removed in portalBlockJsonDates.removed)
+                    {
+                        Guid id = Guid.Parse(removed.id);
+                        Entity portalTimeOffRequest = new Entity(C.PortalTimeOffRequest.EntityName, id);
+                        portalTimeOffRequest[C.PortalTimeOffRequest.State] = new OptionSetValue(1);
+                        TracingService.Trace($"Deactivating portalTimeOffRequest '{id}' for bookable resource {bookableResource.Id}, with date {removed.date}");
+                        OrganizationService.Update(portalTimeOffRequest);
+                    }
+                }
+            } else
+                throw new Exception("Bookable Resource is null! && json Dates string is null!!");
+        }
+
+        private PortalBlockJsonDates DeserializePortalBlockJsonDates(string jsonDatesAsString)
+        {
+            using (MemoryStream memoryStream = new MemoryStream())
+            {
+                //initialize DataContractJsonSerializer object and pass Student class type to it
+                DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(PortalBlockJsonDates));
+
+                //user stream writer to write JSON string data to memory stream
+                StreamWriter writer = new StreamWriter(memoryStream);
+                writer.Write(jsonDatesAsString);
+                writer.Flush();
+
+                memoryStream.Position = 0;
+                //get the Desrialized data in object of type Student
+                PortalBlockJsonDates serializedObject = (PortalBlockJsonDates)serializer.ReadObject(memoryStream);
+
+                return serializedObject;
+            }
+        }
+
+        private List<Entity> EnsureOnlyOnePortalRequestPerDay(List<Entity> allPortalRequestsBetweenDates, out int deactivatedNumber)
+        {
+            Dictionary<string, Entity> uniquePortalRequests = new Dictionary<string, Entity>();
+            deactivatedNumber = 0;
+            foreach (Entity entity in allPortalRequestsBetweenDates)
+            {
+                if (entity.Contains(C.PortalTimeOffRequest.Start))
+                {
+                    var retrievedDate = entity.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start);
+                    if (uniquePortalRequests.ContainsKey(retrievedDate.ToString(DateKeyFormat)))
+                    {
+                        deactivatedNumber++;
+                        DeactivatePortalTimeOffRequest(entity);
+                    }
+                    else
+                    {
+                        uniquePortalRequests.Add(retrievedDate.ToString(DateKeyFormat), entity);
+                    }
+                }
+
+            }
+
+            return uniquePortalRequests?.Select(x => x.Value).ToList();
+        }
+
+        private void DeactivatePortalTimeOffRequest(Entity entity)
+        {
+            TracingService.Trace($"Deactivating portal time off request with date {entity.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start)}");
+
+            Entity entityToDeactivate = new Entity(C.PortalTimeOffRequest.EntityName, entity.Id);
+            entityToDeactivate[C.PortalTimeOffRequest.State] = new OptionSetValue(1);
+            entityToDeactivate[C.PortalTimeOffRequest.StatusCode] = new OptionSetValue(2);
+
+            OrganizationService.Update(entityToDeactivate);
+        }
+
+        private void RemoveCalendarItemsFromDaysWithoutPortalRequest(
+            EntityReference bookableReference, 
+            List<DateTime> daysWithoutPortalRequest,
+            out int calendarItemsDeleted)
+        {
+            calendarItemsDeleted = 0;
+            foreach (var date in daysWithoutPortalRequest)
+            {
+                if (!CalendarBusinessLogic.OkToCreateTimeOffRequest(bookableReference, date, out List<CalendarRule> rules))
+                {
+                    TracingService.Trace($"Deleting calendarItems for date {date}");
+                    foreach (var cRule in rules)
+                    {
+                        CalendarBusinessLogic.DeleteCalendarRequest(Guid.Parse(cRule.CalendarId), Guid.Parse(cRule.InnerCalendarId));
+                        calendarItemsDeleted++;
                     }
                 }
             }
