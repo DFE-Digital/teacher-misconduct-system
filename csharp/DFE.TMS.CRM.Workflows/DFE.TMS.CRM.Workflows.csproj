@@ -113,6 +113,9 @@
     <Compile Include="..\DFE.TMS.Business\Models\FullSyncResults.cs">
       <Link>DFE.TMS.Business\Models\FullSyncResults.cs</Link>
     </Compile>
+    <Compile Include="..\DFE.TMS.Business\Models\PortalBlockJsonDates.cs">
+      <Link>DFE.TMS.Business\Models\PortalBlockJsonDates.cs</Link>
+    </Compile>
     <Compile Include="..\DFE.TMS.Business\Models\ResultSetxml.cs">
       <Link>DFE.TMS.Business\Models\ResultSetxml.cs</Link>
     </Compile>
