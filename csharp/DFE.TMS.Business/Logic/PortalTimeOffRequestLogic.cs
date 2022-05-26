@@ -159,6 +159,7 @@ namespace DFE.TMS.Business.Logic
                         portalTimeOffRequest[C.PortalTimeOffRequest.End] = dateEnd;
 
                         TracingService.Trace($"Creating time off date '{dateStart}' for bookable resource {bookableResource.Id}.");
+                        PreCreatePortalTimeOffRequest(portalTimeOffRequest);
                         OrganizationService.Create(portalTimeOffRequest);
                     }
                 }
@@ -172,6 +173,7 @@ namespace DFE.TMS.Business.Logic
                         Entity portalTimeOffRequest = new Entity(C.PortalTimeOffRequest.EntityName, id);
                         portalTimeOffRequest[C.PortalTimeOffRequest.State] = new OptionSetValue(1);
                         TracingService.Trace($"Deactivating portalTimeOffRequest '{id}' for bookable resource {bookableResource.Id}, with date {removed.date}");
+                        DeleteTimeOffCalendarItem(portalTimeOffRequest);
                         OrganizationService.Update(portalTimeOffRequest);
                     }
                 }
