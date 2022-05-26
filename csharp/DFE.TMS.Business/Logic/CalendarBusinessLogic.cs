@@ -190,6 +190,20 @@ namespace DFE.TMS.Business.Logic
             return (Guid.Empty,Guid.Empty);
         }
 
+        public (Guid?, Guid?) CreateTimeOffRequestForBookableResourceWithoutCheck(Guid bookableResourceId, DateTime timeOfDay)
+        {
+            TracingService.Trace($"Entering: CreateTimeOffRequestForBookableResource(Guid bookableResourceId {bookableResourceId}, DateTime timeOfDay {timeOfDay})");
+            Entity bookableResource = RetrieveBookableResource(new EntityReference(C.BookableResource.EntityName) { Id = bookableResourceId });
+            if (bookableResource != null && bookableResource.Contains(C.BookableResource.CalendarId))
+            {
+                var calendarId = bookableResource.GetAttributeValue<EntityReference>(C.BookableResource.CalendarId).Id;
+                var innerCalendarId = CreateTimeOffRequest(calendarId, timeOfDay);
+                return (calendarId, innerCalendarId);
+            }
+
+            return (Guid.Empty, Guid.Empty);
+        }
+
         public Guid? CreateTimeOffRequest(Guid calendarId, DateTime timeOfDay)
         {
             TracingService.Trace($"Entering: CreateTimeOffRequest(Guid calendarId {calendarId}, DateTime timeOfDay {timeOfDay}) ");

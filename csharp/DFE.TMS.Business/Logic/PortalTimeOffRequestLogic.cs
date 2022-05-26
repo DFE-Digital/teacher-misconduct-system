@@ -92,7 +92,7 @@ namespace DFE.TMS.Business.Logic
                         var bookableResource = targetToCreate.GetAttributeValue<EntityReference>(C.PortalTimeOffRequest.Resource);
                         var timeOffDate = targetToCreate.GetAttributeValue<DateTime>(C.PortalTimeOffRequest.Start);
 
-                        var calenderItem = CalendarBusinessLogic.CreateTimeOffRequestForBookableResource(bookableResource.Id, timeOffDate);
+                        var calenderItem = CalendarBusinessLogic.CreateTimeOffRequestForBookableResourceWithoutCheck(bookableResource.Id, timeOffDate);
                         if (calenderItem.Item1.HasValue && (calenderItem.Item1.Value.CompareTo(Guid.Empty) != 0))
                         {
                             TracingService.Trace("We have a calendar item. Save against the portal time off request");
