@@ -98,6 +98,9 @@
     <Compile Include="..\DFE.TMS.Business\Logic\PortalTimeOffRequestLogic.cs">
       <Link>DFE.TMS.Business\Logic\PortalTimeOffRequestLogic.cs</Link>
     </Compile>
+    <Compile Include="..\DFE.TMS.Business\Logic\RollupFieldsToEntityLogic.cs">
+      <Link>DFE.TMS.Business\Logic\RollupFieldsToEntityLogic.cs</Link>
+    </Compile>
     <Compile Include="..\DFE.TMS.Business\Models\CalendarRule.cs">
       <Link>DFE.TMS.Business\Models\CalendarRule.cs</Link>
     </Compile>

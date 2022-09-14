@@ -83,6 +83,7 @@
     <Compile Include="Logic\C.cs" />
     <Compile Include="Logic\CalendarBusinessLogic.cs" />
     <Compile Include="Logic\PortalTimeOffRequestLogic.cs" />
+    <Compile Include="Logic\RollupFieldsToEntityLogic.cs" />
     <Compile Include="Models\CalendarRule.cs" />
     <Compile Include="Models\FullSyncResults.cs" />
     <Compile Include="Models\PortalBlockJsonDates.cs" />
