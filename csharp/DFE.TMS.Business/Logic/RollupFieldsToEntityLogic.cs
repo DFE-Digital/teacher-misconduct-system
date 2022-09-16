@@ -43,8 +43,20 @@ namespace DFE.TMS.Business.Logic
             int attributeLength = fromEntityAttributes.Length;
             for (int p = 0; p < attributeLength; p++)
             {
-                TracingService.Trace($"Rolling up field from entity {fromEntity.LogicalName} '{fromEntityAttributes[p]}' to {toEntityLogicalName} {toEntityAttributes[p]}");
-                toEntity[toEntityAttributes[p]] = (fromEntity[fromEntityAttributes[p]] == null) ? null : fromEntity[fromEntityAttributes[p]];
+                string fromEntityAttributeName = fromEntityAttributes[p];
+                string toEntityAttributeName = toEntityAttributes[p];
+                TracingService.Trace($"Rolling up field from entity {fromEntity.LogicalName} '{fromEntityAttributeName}' to {toEntityLogicalName} {toEntityAttributeName}");
+
+                if (fromEntity.Contains(fromEntityAttributeName))
+                {
+                    TracingService.Trace($"From entity contains {fromEntityAttributeName}");
+                    toEntity[toEntityAttributeName] = fromEntity[fromEntityAttributeName];
+                }
+                else
+                {
+                    TracingService.Trace($"From entity DOES NOT contain {fromEntityAttributeName}. Setting field to null");
+                    toEntity[toEntityAttributeName] = null;
+                }
             }
 
             Service.Update(toEntity);

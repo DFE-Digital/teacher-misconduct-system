@@ -70,5 +70,13 @@ namespace DFE.TMS.Business.Logic
             public const string State = "statecode";
             public const string StatusCode = "statuscode";
         }
+
+        public static class Incident
+        {
+            public const string EntityName = "incident";
+            public const string HearingStartDateRollup = "dfe_hearingstartdaterollup";
+            public const string NohDueToBeSentDate = "dfe_noticeofhearingduetobesent";
+            public const string NohDueToBeSentOverride = "dfe_noticeofhearingduetobesentoverride";
+        }
     }
 }

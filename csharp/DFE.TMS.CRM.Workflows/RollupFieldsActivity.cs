@@ -51,6 +51,9 @@ namespace DFE.TMS.CRM.Workflows
             string[] fromEntityAttributeStrings = FromEntitySchemaAttributes.Get(context).Split(',');
             string[] toEntityAttributeStrings = ToEntitySchemaAttributes.Get(context).Split(',');
 
+            tracingService.Trace($"Guid from Entity Id {FromEntityId.Get(context)}");
+            tracingService.Trace($"Guid To Entity Id {ToEntityId.Get(context)}");
+
             rollupFieldsLogic.RollupToEntity(
                 FromEntityName.Get(context),
                 Guid.Parse(FromEntityId.Get(context)),
