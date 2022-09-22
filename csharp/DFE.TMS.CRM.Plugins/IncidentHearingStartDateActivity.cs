@@ -10,7 +10,7 @@ namespace DFE.TMS.CRM.Plugins
 {
     public class IncidentHearingStartDateActivity : IPlugin
     {
-        private const int NOH_DAYS_TO_BE_ADDED = -84;
+        private const int NOH_DAYS_TO_BE_ADDED = -71;
 
         public void Execute(IServiceProvider serviceProvider)
         {
@@ -40,20 +40,14 @@ namespace DFE.TMS.CRM.Plugins
                 image = context.PreEntityImages["image"];
                 target = (Entity)context.InputParameters["Target"];
 
-                if (!image.Contains(C.Incident.NohDueToBeSentOverride)
-                    || (image.Contains(C.Incident.NohDueToBeSentOverride) &&
-                       !image.GetAttributeValue<bool>(C.Incident.NohDueToBeSentOverride)))
+                if (target.Contains(C.Incident.HearingStartDateRollup) 
+                    && target[C.Incident.HearingStartDateRollup] != null)
                 {
-                    trace.Trace("Override is No or Null. Proceeding to Update 'Noh Due To Be Sent Date'");
-                    if (target.Contains(C.Incident.HearingStartDateRollup))
-                    {
-                        DateTime hearingStartDate = target.GetAttributeValue<DateTime>(C.Incident.HearingStartDateRollup);
-                        DateTime nohDueToBeSentDate = hearingStartDate.AddDays(NOH_DAYS_TO_BE_ADDED);
+                    DateTime hearingStartDate = target.GetAttributeValue<DateTime>(C.Incident.HearingStartDateRollup);
+                    DateTime nohDueToBeSentDate = hearingStartDate.AddDays(NOH_DAYS_TO_BE_ADDED);
 
-                        target[C.Incident.NohDueToBeSentDate] = nohDueToBeSentDate;
-                    }
+                    target[C.Incident.NohDueToBeSentDate] = nohDueToBeSentDate;
                 }
-
             }
         }
     }

@@ -34,6 +34,7 @@ namespace DFE.TMS.Business.Logic
             Entity fromEntity = Service.Retrieve(fromEntityLogicalName, fromEntityId, new Microsoft.Xrm.Sdk.Query.ColumnSet(fromEntityAttributes));
 
             UpdateToEntity(fromEntity, fromEntityAttributes, toEntityLogicalName, toEntityId, toEntityAttributes);
+            
         }
 
         private void UpdateToEntity(Entity fromEntity, string[] fromEntityAttributes, string toEntityLogicalName, Guid toEntityId, string[] toEntityAttributes)
@@ -50,6 +51,7 @@ namespace DFE.TMS.Business.Logic
                 if (fromEntity.Contains(fromEntityAttributeName))
                 {
                     TracingService.Trace($"From entity contains {fromEntityAttributeName}");
+                    TracingService.Trace($"{fromEntityAttributeName} value: {fromEntity[fromEntityAttributeName]}");
                     toEntity[toEntityAttributeName] = fromEntity[fromEntityAttributeName];
                 }
                 else

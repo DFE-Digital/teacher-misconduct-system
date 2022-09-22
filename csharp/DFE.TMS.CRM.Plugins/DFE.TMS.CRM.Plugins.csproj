@@ -113,6 +113,7 @@
     <Compile Include="..\DFE.TMS.Business\Models\ResultSetxml.cs">
       <Link>DFE.TMS.Business\Models\ResultSetxml.cs</Link>
     </Compile>
+    <Compile Include="EnsureCaseOnBookableResourceActivity.cs" />
     <Compile Include="IncidentHearingStartDateActivity.cs" />
     <Compile Include="PortalTimeOffBlockPreCreateActivity.cs" />
     <Compile Include="PortalTimeOffRequestDeleteActivity.cs" />

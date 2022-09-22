@@ -74,9 +74,29 @@ namespace DFE.TMS.Business.Logic
         public static class Incident
         {
             public const string EntityName = "incident";
+            public const string EntityId = "incidentid";
             public const string HearingStartDateRollup = "dfe_hearingstartdaterollup";
             public const string NohDueToBeSentDate = "dfe_noticeofhearingduetobesent";
             public const string NohDueToBeSentOverride = "dfe_noticeofhearingduetobesentoverride";
+        }
+
+        public static class CaseActivity
+        {
+            public const string EntityName = "dfe_caseactivity";
+            public const string EntityId = "activityid";
+            public const string CaseId = "regardingobjectid";
+            public const string CaseActivityType = "dfe_activitytype";
+            public enum CaseActivityTypeEnum
+            { 
+             Hearing = 222750024
+            }
+        }
+
+        public static class BookableResourceBooking
+        {
+            public const string EntityName = "bookableresourcebooking";
+            public const string CaseActivityId = "new_dfe_caseactivity";
+            public const string CaseId = "new_incident";
         }
     }
 }
