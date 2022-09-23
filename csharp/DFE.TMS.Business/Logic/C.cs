@@ -88,7 +88,11 @@ namespace DFE.TMS.Business.Logic
             public const string CaseActivityType = "dfe_activitytype";
             public enum CaseActivityTypeEnum
             { 
-             Hearing = 222750024
+             Hearing =              222750024,
+             NoticeOfHearing =      222750017,
+             InstructingLegalFirm = 222750030,
+             HearingPreperation =   222750018,
+
             }
         }
 

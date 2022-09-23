@@ -1,0 +1,15 @@
+﻿Hearing Activity
+From - dfe_hearingstartdate,dfe_hearingenddate,dfe_hearingstatus,dfe_chairid,dfe_hearingtype
+To -   dfe_hearingstartdaterollup,dfe_hearingenddaterollup,dfe_hearingstatusrollup,dfe_chairidrollup,dfe_hearingtyperollup
+
+Hearing Prep Activity
+From - dfe_bundleexpecteddate,dfe_bundlereceiveddate,dfe_formalnoticepublished,dfe_hearingbundledistributeddate
+To -   dfe_bundleexpecteddaterollup,dfe_bundlereceiveddaterollup,dfe_formalnoticepublishedrollup,dfe_hearingbundledistributeddaterollup
+
+Instructing Legal Firm Activity
+From - dfe_instructiondate
+To -   dfe_instructiondaterollup
+
+Notice Of Hearing Activity
+From - dfe_noticeofhearingresponsereceiveddate,dfe_noticeofhearingsentdate,dfe_draftnoticeofhearingreceiveddate
+To -   dfe_noticeofhearingresponsereceiveddaterollup,dfe_noticeofhearingsentdaterollup,dfe_draftnoticeofhearingreceiveddaterollup
